@@ -6,7 +6,7 @@ namespace Chaining
 {
     internal class Program
     {
-        public static List<string> facts = new List<string>(){"true"};
+        public static List<string> facts = new List<string>();
         public static List<Implication> rules = new List<Implication>();
         public static List<string> entails = new List<string>();
         
@@ -41,7 +41,7 @@ namespace Chaining
             while (rules.Count < clauses)
             {
                 string line = Console.ReadLine().Replace("\t", string.Empty);
-                bool newRule = processLine(line, rule);
+                bool newRule = ProcessLine(line, rule);
 
                 if (newRule)
                 {
@@ -59,13 +59,29 @@ namespace Chaining
             
             foreach (var alpha in entails)
             {
-                Console.WriteLine($"{alpha}. {forwardChaining(alpha).ToString()}.");
+                if (type == "f")
+                {
+                    if (!facts.Contains("true"))
+                    {
+                        facts.Add("true");
+                    }
+                    
+                    Console.WriteLine($"{alpha}. {ForwardChaining(alpha).ToString().ToLower()}.");
+                }
+                else if (type == "b")
+                {
+                    facts.Clear();
+                    facts.Add(alpha);
+                    
+                    Console.WriteLine($"{alpha}. {BackwardChaining().ToString().ToLower()}.");
+                }
+                
             }
             
             return;
         }
 
-        public static bool processLine(string line, Implication rule)
+        private static bool ProcessLine(string line, Implication rule)
         {
             // Remove comments and spaces
             line = line.Split('%')[0].Trim();
@@ -117,7 +133,7 @@ namespace Chaining
             return false;
         }
 
-        public static bool forwardChaining(string alpha)
+        private static bool ForwardChaining(string alpha)
         {
             Queue<string> queue = new Queue<string>(facts);
 
@@ -136,7 +152,7 @@ namespace Chaining
                 {
                     if (rule.Tail.Contains(fact))
                     {
-                        if (rule.isTrue())
+                        if (rule.IsTrue())
                         {
                             if (!facts.Contains(rule.Head))
                             {
@@ -150,16 +166,46 @@ namespace Chaining
 
             return false;
         }
+
+        private static bool BackwardChaining()
+        {
+            Queue<string> queue = new Queue<string>(facts);
+
+            while (queue.Count > 0)
+            {
+                if (facts.Contains("true"))
+                {
+                    return true;
+                } 
+                
+                string fact = queue.Dequeue();
+
+                foreach (var rule in rules)
+                {
+                    if (rule.Head == fact)
+                    {
+                        foreach (var tail in rule.Tail)
+                        {
+                            if (facts.Contains(tail))
+                            {
+                                continue;
+                            }
+                            facts.Add(tail);
+                            queue.Enqueue(tail);
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 
     class Implication
     {
-        private string head;
-        private List<string> tail = new List<string>();
-
-        public bool isTrue()
+        public bool IsTrue()
         {
-            foreach (var a in tail)
+            foreach (var a in Tail)
             {
                 if (!Program.facts.Contains(a))
                 {
@@ -170,16 +216,8 @@ namespace Chaining
             return true;
         }
 
-        public string Head
-        {
-            get => head;
-            set => head = value;
-        }
+        public string Head { get; set; }
 
-        public List<string> Tail
-        {
-            get => tail;
-            set => tail = value;
-        }
+        public List<string> Tail { get; set; } = new List<string>();
     }
 }
