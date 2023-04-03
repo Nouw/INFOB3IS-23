@@ -1,0 +1,1 @@
+bfs(Initieel, Doel, Path) :-
