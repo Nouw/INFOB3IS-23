@@ -1,0 +1,1 @@
+action_schema(Action, Precondtions, Positive, Negative)
